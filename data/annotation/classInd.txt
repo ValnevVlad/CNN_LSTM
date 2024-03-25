@@ -1,0 +1,12 @@
+1 Step_7_Left
+2 Step_1
+3 Step_6_Left
+4 Step_5_Left
+5 Step_2_Right
+6 Step_6_Right
+7 Step_4_Right
+8 Step_4_Left
+9 Step_5_Right
+10 Step_3
+11 Step_2_Left
+12 Step_7_Right
