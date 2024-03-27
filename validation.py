@@ -11,21 +11,23 @@ import numpy as np
 from utils import AverageMeter, calculate_accuracy
 
 
-def val_epoch(model, data_loader, criterion, device):
+def val_epoch(model, data_loader, non_image_loader, criterion, device):
     model.eval()
 
     losses = AverageMeter()
     accuracies = AverageMeter()
     with torch.no_grad():
         for (data, targets) in data_loader:
-            data, targets = data.to(device), targets.to(device)
-            outputs = model(data)  
+            for non_img_data, non_image_targets in non_image_loader:
+                non_img_data, non_image_targets = non_img_data.to(device), non_image_targets.to(device)
+                data, targets = data.to(device), targets.to(device)
+                outputs = model(data)  
 
-            loss = criterion(outputs, targets)
-            acc = calculate_accuracy(outputs, targets)
+                loss = criterion(outputs, targets)
+                acc = calculate_accuracy(outputs, targets)
 
-            losses.update(loss.item(), data.size(0))
-            accuracies.update(acc, data.size(0))
+                losses.update(loss.item(), data.size(0))
+                accuracies.update(acc, data.size(0))
 
     # show info
     print('Validation set ({:d} samples): Average loss: {:.4f}\tAcc: {:.4f}%'.format(len(data_loader.dataset), losses.avg, accuracies.avg * 100))
