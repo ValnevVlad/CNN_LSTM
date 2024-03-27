@@ -11,15 +11,16 @@ class CNNLSTM(nn.Module):
         super(CNNLSTM, self).__init__()
         self.resnet = resnet101(pretrained=True)
         self.resnet.fc = nn.Sequential(nn.Linear(self.resnet.fc.in_features, 300))
-        self.lstm = nn.LSTM(input_size=300, hidden_size=256, num_layers=3)
+        self.lstm = nn.LSTM(input_size=300+6912, hidden_size=256, num_layers=3)
         self.fc1 = nn.Linear(256, 128)
         self.fc2 = nn.Linear(128, num_classes)
        
-    def forward(self, x_3d):
+    def forward(self, x_3d, non_image_features):
         hidden = None
         for t in range(x_3d.size(1)):
             with torch.no_grad():
-                x = self.resnet(x_3d[:, t, :, :, :])  
+                x = self.resnet(x_3d[:, t, :, :, :]) 
+            x = torch.cat((x, non_image_features), dim=1)
             out, hidden = self.lstm(x.unsqueeze(0), hidden)         
 
         x = self.fc1(out[-1, :, :])

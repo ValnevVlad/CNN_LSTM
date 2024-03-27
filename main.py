@@ -12,7 +12,7 @@ from validation import val_epoch
 from opts import parse_opts
 from model import generate_model
 from torch.optim import lr_scheduler
-from dataset import get_training_set, get_validation_set
+from dataset import get_training_set, get_validation_set, get_non_image_set
 from mean import get_mean, get_std
 from spatial_transforms import (
 	Compose, Normalize, Scale, CenterCrop, CornerCrop, MultiScaleCornerCrop,
@@ -60,7 +60,7 @@ def get_loaders(opt):
 		shuffle=True,
 		num_workers=opt.num_workers,
 		pin_memory=True)
-
+	
 	# validation loader
 	spatial_transform = Compose([
 		Scale((opt.sample_size, opt.sample_size)),
@@ -77,7 +77,25 @@ def get_loaders(opt):
 		shuffle=False,
 		num_workers=opt.num_workers,
 		pin_memory=True)
-	return train_loader, val_loader
+
+	train_non_image_data, test_non_image_data = get_non_image_set()
+	# train_non_image_data = get_train_non_image_set()
+	train_non_img_loader = torch.utils.data.DataLoader(
+		train_non_image_data,
+		batch_size=opt.batch_size,
+		shuffle=True,
+		num_workers=opt.num_workers,
+		pin_memory=True)
+	
+	# test_non_image_data = get_test_non_image_set()
+	test_non_img_loader = torch.utils.data.DataLoader(
+		test_non_image_data,
+		batch_size=opt.batch_size,
+		shuffle=True,
+		num_workers=opt.num_workers,
+		pin_memory=True)
+	
+	return train_loader, val_loader, train_non_img_loader, test_non_img_loader
 
 
 def main_worker():
@@ -94,11 +112,12 @@ def main_worker():
 
 	# tensorboard
 	summary_writer = tensorboardX.SummaryWriter(log_dir='tf_logs')
+		
+	# get data loaders
+	train_loader, val_loader, train_non_img_loader, test_non_img_loader = get_loaders(opt)
 
 	# defining model
 	model =  generate_model(opt, device)
-	# get data loaders
-	train_loader, val_loader = get_loaders(opt)
 
 	# optimizer
 	crnn_params = list(model.parameters())
@@ -117,9 +136,9 @@ def main_worker():
 	# start training
 	for epoch in range(start_epoch, opt.n_epochs + 1):
 		train_loss, train_acc = train_epoch(
-			model, train_loader, criterion, optimizer, epoch, opt.log_interval, device)
+			model, train_loader, train_non_img_loader, criterion, optimizer, epoch, opt.log_interval, device)
 		val_loss, val_acc = val_epoch(
-			model, val_loader, criterion, device)
+			model, val_loader, test_non_img_loader, criterion, device)
 
 		# saving weights to checkpoint
 		if (epoch) % opt.save_interval == 0:
