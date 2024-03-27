@@ -33,11 +33,11 @@ def train_epoch(model, data_loader, non_image_loader, criterion, optimizer, epoc
             loss.backward()
             optimizer.step()
 
-            if (batch_idx + 1) % log_interval == 0:
-                avg_loss = train_loss / log_interval
-                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                    epoch, (batch_idx + 1) * len(data), len(data_loader.dataset), 100. * (batch_idx + 1) / len(data_loader), avg_loss))
-                train_loss = 0.0
+        if (batch_idx + 1) % log_interval == 0:
+            avg_loss = train_loss / log_interval
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                epoch, (batch_idx + 1) * len(data), len(data_loader.dataset), 100. * (batch_idx + 1) / len(data_loader), avg_loss))
+            train_loss = 0.0
 
     print('Train set ({:d} samples): Average loss: {:.4f}\tAcc: {:.4f}%'.format(
         len(data_loader.dataset), losses.avg, accuracies.avg * 100))
